@@ -1,0 +1,8 @@
+{
+  "jquery": true,
+  "camelcase": true,
+  "indent": 2,
+  "curly": true,
+  "strict": false,
+  "browser": true
+}
