@@ -2,7 +2,8 @@ const
     switcher = document.querySelector('#cbx'),
     more = document.querySelector('.more'),
     modal = document.querySelector('.modal'),
-    videos = document.querySelectorAll('.videos__item');
+    videos = document.querySelectorAll('.videos__item'),
+    videosWrapper = document.querySelector('.videos__wrapper');
 let player,
     night = false;
 
@@ -58,7 +59,7 @@ switcher.addEventListener('change', () => {
 
 bindSlideToggle('.hamburger', '[data-slide="nav"]', '.header__menu', 'slide-active');
 
-const data = [
+/*const data = [
     ['img/thumb_3.webp', 'img/thumb_4.webp', 'img/thumb_5.webp'],
     ['#3 Верстка на flexbox CSS | Блок преимущества и галерея | Марафон верстки | Артем Исламов',
         '#2 Установка spikmi и работа с ветками на Github | Марафон вёрстки Урок 2',
@@ -95,6 +96,109 @@ more.addEventListener('click', () => {
     }
     sliceTitle('.videos__item-descr', 100);
 
+});*/
+
+function start() {
+    gapi.client.init({
+        'apiKey': 'AIzaSyC4AaQ36-hOHcjo--T2qeYiy7oG7LGPXak',
+        'discoveryDocs': ["https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest"]
+    }).then(function () {
+        return gapi.client.youtube.playlistItems.list({
+            "part": "snippet,contentDetails",
+            "maxResults": '6',
+            "playlistId": "PL7-a4pKt1YOln8EqGXnIVtLEMPZRUGHcs"
+        });
+    }).then(function (response) {
+        console.log(response.result);
+
+        response.result.items.forEach(item => {
+            let card = document.createElement('a');
+
+            card.classList.add('videos__item', 'videos__item-active');
+            card.setAttribute('data-url', item.contentDetails.videoId);
+            card.innerHTML = `
+            <img src="${item.snippet.thumbnails.high.url}" alt="thumb">
+            <div class="videos__item-descr">
+                ${item.snippet.title}
+            </div>
+            <div class="videos__item-views">
+                2.7 тыс. просмотров
+            </div>
+        `;
+            videosWrapper.appendChild(card);
+            setTimeout(() => {
+                card.classList.remove('videos__item-active');
+            }, 10);
+            if (night) {
+                card.style.color = '#fff';
+            }
+        });
+
+        bindModal(document.querySelectorAll('.videos__item'));
+        sliceTitle('.videos__item-descr', 50);
+
+    }).catch(e => {
+        console.log(e);
+    });
+}
+
+more.addEventListener('click', () => {
+    more.remove();
+    gapi.load('client', start);
+});
+
+function search(target) {
+    gapi.client.init({
+        'apiKey': 'AIzaSyC4AaQ36-hOHcjo--T2qeYiy7oG7LGPXak',
+        'discoveryDocs': ["https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest"]
+    }).then(function () {
+        return gapi.client.youtube.search.list({
+            'maxResults': '10',
+            'part': 'snippet',
+            'q': `${target}`,
+            'type': ''
+        });
+    }).then(function (response) {
+        console.log(response.result);
+        // videosWrapper.innerHTML = '';
+        while (videosWrapper.firstChild) {
+            videosWrapper.removeChild(videosWrapper.firstChild);
+        }
+
+        response.result.items.forEach(item => {
+            let card = document.createElement('a');
+
+            card.classList.add('videos__item', 'videos__item-active');
+            card.setAttribute('data-url', item.id.videoId);
+            card.innerHTML = `
+            <img src="${item.snippet.thumbnails.high.url}" alt="thumb">
+            <div class="videos__item-descr">
+                ${item.snippet.title}
+            </div>
+            <div class="videos__item-views">
+                2.7 тыс. просмотров
+            </div>
+        `;
+            videosWrapper.appendChild(card);
+            setTimeout(() => {
+                card.classList.remove('videos__item-active');
+            }, 10);
+            if (night) {
+                card.style.color = '#fff';
+            }
+        });
+
+        bindModal(document.querySelectorAll('.videos__item'));
+        sliceTitle('.videos__item-descr', 50);
+    }).catch(e => {
+        console.log(e)
+    });
+}
+
+document.querySelector('.search').addEventListener('submit', (e) => {
+    e.preventDefault();
+    gapi.load('client', () => { search(document.querySelector('.search > input').value) });
+    document.querySelector('.search > input').value = '';
 });
 
 function sliceTitle(textSelector, length) {
@@ -132,7 +236,7 @@ function bindModal(cards) {
     });
 }
 
-bindModal(videos);
+// bindModal(videos);
 
 function bindNewModal(cards) {
     cards.addEventListener('click', (event) => {
@@ -145,6 +249,12 @@ function bindNewModal(cards) {
 
 modal.addEventListener('click', (event) => {
     if (!(event.target.classList.contains('modal__body'))) {
+        closeModal();
+    }
+});
+
+document.addEventListener('keydown', function (event) {
+    if (event.keyCode  === 27) {
         closeModal();
     }
 });
@@ -162,7 +272,7 @@ function createVideo() {
             width: '100%',
             videoId: 'M7lc1UVf-VE'
         });
-    }, 300);
+    }, 1000);
 }
 
 createVideo();
